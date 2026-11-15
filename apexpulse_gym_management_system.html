@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ApexPulse | Modern Gym Management System</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        slate: {
+                            850: '#151e32',
+                            900: '#0f172a',
+                            950: '#090d16',
+                        },
+                        lime: {
+                            400: '#a3e635',
+                            500: '#84cc16',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased selection:bg-lime-400 selection:text-slate-950 overflow-x-hidden">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Mobile Header -->
+    <header class="lg:hidden flex items-center justify-between px-4 py-3 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
+        <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-lime-400 to-emerald-500 flex items-center justify-center text-slate-950 font-extrabold shadow-lg shadow-lime-500/20">
+                <i data-lucide="dumbbell" class="w-5 h-5"></i>
+            </div>
+            <span class="font-bold text-lg tracking-tight text-white">APEX<span class="text-lime-400">PULSE</span></span>
+        </div>
+        <button id="mobile-menu-btn" class="p-2.5 rounded-xl bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleMobileMenu()"></div>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="fixed lg:sticky top-0 left-0 z-40 h-screen w-68 bg-slate-900 border-r border-slate-800/80 flex flex-col justify-between transition-transform duration-300 -translate-x-full lg:translate-x-0 shrink-0">
+            <div>
+                <!-- Brand Logo -->
+                <div class="h-20 px-6 flex items-center justify-between border-b border-slate-800/80">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-lime-400 to-emerald-500 flex items-center justify-center text-slate-950 shadow-lg shadow-lime-400/20">
+                            <i data-lucide="dumbbell" class="w-6 h-6 stroke-[2.5]"></i>
+                        </div>
+                        <div>
+                            <h1 class="font-extrabold text-xl tracking-tight text-white leading-none">APEX<span class="text-lime-400">PULSE</span></h1>
+                            <p class="text-[11px] font-medium text-slate-400 tracking-widest uppercase mt-1">Gym Command</p>
+                        </div>
+                    </div>
+                    <button class="lg:hidden p-2 text-slate-400 hover:text-white" onclick="toggleMobileMenu()">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="p-4 space-y-1.5" id="nav-links">
+                    <button data-tab="dashboard" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-lime-400/10 text-lime-400 border border-lime-400/20">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button data-tab="members" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all border border-transparent">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                        <span>Members</span>
+                        <span id="nav-member-count" class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">0</span>
+                    </button>
+                    <button data-tab="schedule" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all border border-transparent">
+                        <i data-lucide="calendar-days" class="w-5 h-5"></i>
+                        <span>Classes & Schedule</span>
+                    </button>
+                    <button data-tab="plans" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all border border-transparent">
+                        <i data-lucide="credit-card" class="w-5 h-5"></i>
+                        <span>Plans & Billing</span>
+                    </button>
+                    <button data-tab="equipment" class="nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all border border-transparent">
+                        <i data-lucide="wrench" class="w-5 h-5"></i>
+                        <span>Equipment Tracker</span>
+                        <span id="nav-alert-count" class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 hidden">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Bottom Actions & Reset -->
+            <div class="p-4 border-t border-slate-800/80 space-y-3">
+                <div class="p-3.5 rounded-xl bg-slate-850 border border-slate-800 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold text-sm">
+                        AD
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-white truncate">Alex Rivera</p>
+                        <p class="text-xs text-slate-400 truncate">Club Manager • Online</p>
+                    </div>
+                </div>
+                <button onclick="resetDemoData()" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/30 transition">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span>Reset Sample Data</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+
+            <!-- ==========================================
+                 1. DASHBOARD OVERVIEW VIEW
+                 ========================================== -->
+            <section id="view-dashboard" class="space-y-6">
+                <!-- Page Header & Quick Check-In Bar -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl">
+                    <div>
+                        <div class="flex items-center gap-2 text-xs font-semibold text-lime-400 uppercase tracking-wider mb-1">
+                            <span class="w-2 h-2 rounded-full bg-lime-400 animate-pulse"></span>
+                            Live Club Operations
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Dashboard Overview</h2>
+                        <p class="text-sm text-slate-400 mt-0.5" id="current-date-display">Monday, November 16, 2026</p>
+                    </div>
+
+                    <!-- Quick Check-in Search -->
+                    <div class="relative w-full md:w-96">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">Quick Member Check-In</label>
+                        <div class="relative">
+                            <i data-lucide="scan-line" class="w-4 h-4 text-lime-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                            <input type="text" id="quick-checkin-input" placeholder="Search member name or email to check in..." autocomplete="off"
+                                class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-lime-400/20 transition">
+                        </div>
+                        <!-- Dropdown results -->
+                        <div id="quick-checkin-results" class="hidden absolute left-0 right-0 mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-30 max-h-64 overflow-y-auto divide-y divide-slate-800"></div>
+                    </div>
+                </div>
+
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+                    <!-- Active Members -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition relative overflow-hidden group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Members</span>
+                            <div class="w-10 h-10 rounded-xl bg-lime-400/10 text-lime-400 flex items-center justify-center group-hover:scale-110 transition">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline gap-2.5">
+                            <h3 id="stat-active-members" class="text-3xl font-extrabold text-white">0</h3>
+                            <span class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">+12.4%</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2" id="stat-total-members-sub">Out of 0 registered profiles</p>
+                    </div>
+
+                    <!-- Today's Check-ins -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition relative overflow-hidden group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Today's Check-Ins</span>
+                            <div class="w-10 h-10 rounded-xl bg-emerald-400/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline gap-2.5">
+                            <h3 id="stat-checkins" class="text-3xl font-extrabold text-white">0</h3>
+                            <span class="text-xs font-semibold text-lime-400 bg-lime-400/10 px-2 py-0.5 rounded-full">Peak: 6 PM</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Real-time turnstile & desk scans</p>
+                    </div>
+
+                    <!-- Monthly Revenue -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition relative overflow-hidden group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Monthly Recurring</span>
+                            <div class="w-10 h-10 rounded-xl bg-orange-400/10 text-orange-400 flex items-center justify-center group-hover:scale-110 transition">
+                                <i data-lucide="dollar-sign" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline gap-2.5">
+                            <h3 id="stat-revenue" class="text-3xl font-extrabold text-white">$0</h3>
+                            <span class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">+8.2%</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Calculated from active subscriptions</p>
+                    </div>
+
+                    <!-- Active Trainers -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition relative overflow-hidden group">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Active Trainers</span>
+                            <div class="w-10 h-10 rounded-xl bg-sky-400/10 text-sky-400 flex items-center justify-center group-hover:scale-110 transition">
+                                <i data-lucide="award" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-baseline gap-2.5">
+                            <h3 class="text-3xl font-extrabold text-white">8</h3>
+                            <span class="text-xs font-semibold text-sky-400 bg-sky-400/10 px-2 py-0.5 rounded-full">6 On Floor</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-2">Certified HIIT, Strength & Yoga coaches</p>
+                    </div>
+                </div>
+
+                <!-- Dashboard Lower Grid: Recent Activity + Upcoming Classes Snapshot -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Recent Activity Feed -->
+                    <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-white">Recent Club Activity</h3>
+                                <p class="text-xs text-slate-400">Live check-ins, renewals, and bookings</p>
+                            </div>
+                            <button onclick="switchTab('members')" class="text-xs font-semibold text-lime-400 hover:text-lime-300 flex items-center gap-1">
+                                View All Members <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <div id="activity-feed-list" class="space-y-3 flex-1 overflow-y-auto max-h-96 pr-1">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Today's Featured Classes & Quick Actions -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col justify-between space-y-5">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-bold text-white">Today's Lineup</h3>
+                                <button onclick="switchTab('schedule')" class="text-xs font-semibold text-lime-400 hover:text-lime-300">Full Schedule</button>
+                            </div>
+                            <div id="dashboard-classes-list" class="space-y-3">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-800 grid grid-cols-2 gap-3">
+                            <button onclick="openMemberModal()" class="p-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition shadow-lg shadow-lime-400/10">
+                                <i data-lucide="user-plus" class="w-4 h-4"></i> Add Member
+                            </button>
+                            <button onclick="switchTab('schedule'); openClassModal();" class="p-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition border border-slate-700">
+                                <i data-lucide="plus-circle" class="w-4 h-4 text-lime-400"></i> New Class
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 2. MEMBERS MANAGEMENT VIEW
+                 ========================================== -->
+            <section id="view-members" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Members Directory</h2>
+                        <p class="text-sm text-slate-400 mt-1">Manage memberships, renewals, status toggles, and profiles.</p>
+                    </div>
+                    <button onclick="openMemberModal()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-bold text-sm transition shadow-lg shadow-lime-400/20">
+                        <i data-lucide="user-plus" class="w-4 h-4 stroke-[2.5]"></i>
+                        <span>Add New Member</span>
+                    </button>
+                </div>
+
+                <!-- Filters & Search Bar -->
+                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl flex flex-col md:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                        <input type="text" id="member-search" placeholder="Search by name or email..."
+                            class="w-full bg-slate-950 border border-slate-800 focus:border-lime-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition">
+                    </div>
+                    <div class="flex flex-wrap sm:flex-nowrap gap-3">
+                        <select id="member-filter-plan" class="bg-slate-950 border border-slate-800 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                            <option value="ALL">All Plans</option>
+                            <option value="Basic">Basic ($39/mo)</option>
+                            <option value="Pro">Pro ($69/mo)</option>
+                            <option value="VIP">VIP ($119/mo)</option>
+                        </select>
+                        <select id="member-filter-status" class="bg-slate-950 border border-slate-800 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                            <option value="ALL">All Statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Expired">Expired</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Responsive Members Table -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-slate-800 bg-slate-950/60 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    <th class="py-4 px-5">Member</th>
+                                    <th class="py-4 px-4">Plan</th>
+                                    <th class="py-4 px-4">Status</th>
+                                    <th class="py-4 px-4">Expiry Date</th>
+                                    <th class="py-4 px-5 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="members-table-body" class="divide-y divide-slate-800/80 text-sm">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="members-empty-state" class="hidden p-12 text-center">
+                        <div class="w-12 h-12 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="users" class="w-6 h-6"></i>
+                        </div>
+                        <p class="text-white font-semibold">No members match your filters</p>
+                        <p class="text-xs text-slate-400 mt-1">Try clearing the search query or adding a new member.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 3. CLASSES & SCHEDULE VIEW
+                 ========================================== -->
+            <section id="view-schedule" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Classes & Weekly Schedule</h2>
+                        <p class="text-sm text-slate-400 mt-1">Book members into studio sessions or schedule new group workouts.</p>
+                    </div>
+                    <button onclick="openClassModal()" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-bold text-sm transition shadow-lg shadow-lime-400/20">
+                        <i data-lucide="calendar-plus" class="w-4 h-4 stroke-[2.5]"></i>
+                        <span>Add New Class</span>
+                    </button>
+                </div>
+
+                <!-- Day Filter Pills -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-2" id="day-filter-bar">
+                    <button data-day="ALL" class="day-pill px-4 py-2 rounded-xl text-xs font-bold bg-lime-400 text-slate-950 transition shrink-0">All Days</button>
+                    <button data-day="Monday" class="day-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition shrink-0">Monday</button>
+                    <button data-day="Tuesday" class="day-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition shrink-0">Tuesday</button>
+                    <button data-day="Wednesday" class="day-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition shrink-0">Wednesday</button>
+                    <button data-day="Thursday" class="day-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition shrink-0">Thursday</button>
+                    <button data-day="Friday" class="day-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition shrink-0">Friday</button>
+                    <button data-day="Saturday" class="day-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition shrink-0">Saturday</button>
+                </div>
+
+                <!-- Classes Grid -->
+                <div id="classes-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 4. MEMBERSHIP PLANS & BILLING VIEW
+                 ========================================== -->
+            <section id="view-plans" class="hidden space-y-6">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Membership Plans & Billing</h2>
+                    <p class="text-sm text-slate-400 mt-1">Tier breakdown, monthly recurring revenue analytics, and quick plan assignment.</p>
+                </div>
+
+                <!-- Membership Tiers Cards -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="plans-cards-container">
+                    <!-- Populated via JS for live subscriber counts & revenue -->
+                </div>
+
+                <!-- Revenue Breakdown Bar -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-white">Revenue Distribution by Tier</h3>
+                            <p class="text-xs text-slate-400">Live MRR contribution across active gym memberships</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-slate-400 uppercase font-semibold">Total Active MRR</span>
+                            <p id="plans-total-mrr" class="text-2xl font-extrabold text-lime-400">$0</p>
+                        </div>
+                    </div>
+                    <div class="w-full h-4 bg-slate-950 rounded-full overflow-hidden flex p-0.5 border border-slate-800" id="revenue-progress-bar">
+                        <!-- Dynamic segments -->
+                    </div>
+                    <div class="grid grid-cols-3 gap-4 mt-4 text-xs" id="revenue-legend">
+                        <!-- Dynamic legend -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 5. EQUIPMENT & MAINTENANCE TRACKER VIEW
+                 ========================================== -->
+            <section id="view-equipment" class="hidden space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Equipment & Maintenance</h2>
+                        <p class="text-sm text-slate-400 mt-1">Monitor floor hardware health and cycle operational statuses in real time.</p>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs font-semibold">
+                        <span class="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="eq-count-op">0 Operational</span>
+                        <span class="px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20" id="eq-count-maint">0 Maintenance</span>
+                        <span class="px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20" id="eq-count-out">0 Out of Order</span>
+                    </div>
+                </div>
+
+                <!-- Equipment Cards/List -->
+                <div id="equipment-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Populated by JS -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ==========================================
+         MODALS
+         ========================================== -->
+
+    <!-- Add New Member Modal -->
+    <div id="member-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white">Register New Member</h3>
+                <button onclick="closeMemberModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="add-member-form" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Full Name</label>
+                    <input type="text" id="new-member-name" required placeholder="e.g., Jordan Vance"
+                        class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
+                    <input type="email" id="new-member-email" required placeholder="jordan.vance@example.com"
+                        class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Membership Plan</label>
+                        <select id="new-member-plan" class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                            <option value="Basic">Basic ($39/mo)</option>
+                            <option value="Pro" selected>Pro ($69/mo)</option>
+                            <option value="VIP">VIP ($119/mo)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Initial Status</label>
+                        <select id="new-member-status" class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                            <option value="Active">Active</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Expiry Date</label>
+                    <input type="date" id="new-member-expiry" required
+                        class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+                <div class="pt-3 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeMemberModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-800 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-bold text-sm transition">Create Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add New Class Modal -->
+    <div id="class-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white">Schedule New Class</h3>
+                <button onclick="closeClassModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="add-class-form" class="mt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Class Title</label>
+                    <input type="text" id="new-class-title" required placeholder="e.g., Sunset Power HIIT"
+                        class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Category</label>
+                        <select id="new-class-category" class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                            <option value="HIIT">HIIT</option>
+                            <option value="Strength">Strength</option>
+                            <option value="Yoga">Yoga</option>
+                            <option value="Spin">Spin</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Day of Week</label>
+                        <select id="new-class-day" class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Trainer</label>
+                        <input type="text" id="new-class-trainer" required placeholder="Coach Elena"
+                            class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Time Slot</label>
+                        <input type="text" id="new-class-time" required placeholder="05:30 PM - 06:30 PM"
+                            class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Studio / Room</label>
+                        <input type="text" id="new-class-room" required placeholder="Turf Zone A"
+                            class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1.5">Max Capacity</label>
+                        <input type="number" id="new-class-capacity" required min="5" max="50" value="20"
+                            class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                    </div>
+                </div>
+                <div class="pt-3 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeClassModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-800 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-bold text-sm transition">Publish Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Book Member Into Class Modal -->
+    <div id="book-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div>
+                    <h3 class="text-lg font-bold text-white" id="book-modal-title">Book Class Spot</h3>
+                    <p class="text-xs text-slate-400 mt-0.5" id="book-modal-subtitle">Select an active member to reserve a spot</p>
+                </div>
+                <button onclick="closeBookModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="mt-4 space-y-4">
+                <input type="hidden" id="book-class-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">Select Active Member</label>
+                    <select id="book-member-select" class="w-full bg-slate-950 border border-slate-700 focus:border-lime-400 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div class="pt-2 flex items-center justify-end gap-3">
+                    <button type="button" onclick="closeBookModal()" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-800 transition">Cancel</button>
+                    <button type="button" onclick="confirmClassBooking()" class="px-5 py-2.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-bold text-sm transition">Confirm Booking</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         APPLICATION LOGIC & STATE MANAGEMENT
+         ========================================== -->
+    <script>
+        // --- Pricing & Plan Definitions ---
+        const PLAN_CONFIG = {
+            Basic: {
+                price: 39,
+                badgeColor: 'bg-slate-800 text-slate-300 border-slate-700',
+                accent: 'text-slate-200',
+                barColor: 'bg-slate-400',
+                tagline: 'Essential floor & cardio access',
+                perks: [
+                    '24/7 Gym Floor & Free Weights Access',
+                    'Locker Room & Digital App Check-In',
+                    '1 Complimentary Fitness Assessment',
+                    'Standard Off-Peak Guest Pass'
+                ]
+            },
+            Pro: {
+                price: 69,
+                badgeColor: 'bg-lime-400/15 text-lime-400 border-lime-400/30',
+                accent: 'text-lime-400',
+                barColor: 'bg-lime-400',
+                popular: true,
+                tagline: 'Unlimited studio classes + full floor',
+                perks: [
+                    'Everything in Basic Membership',
+                    'Unlimited HIIT, Spin, Yoga & Strength Classes',
+                    'Monthly InBody Composition Scan',
+                    '2 Free Guest Passes Every Month'
+                ]
+            },
+            VIP: {
+                price: 119,
+                badgeColor: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+                accent: 'text-orange-400',
+                barColor: 'bg-orange-500',
+                tagline: 'All-access performance & recovery',
+                perks: [
+                    'Everything in Pro Membership',
+                    'Unlimited Infrared Sauna & Cold Plunge',
+                    '2x Monthly 1-on-1 Personal Training',
+                    'Priority Class Booking & Dedicated Locker'
+                ]
+            }
+        };
+
+        // --- Initial Seed Data ---
+        const DEFAULT_STATE = {
+            checkInsToday: 142,
+            members: [
+                { id: 'm1', name: 'Marcus Vance', email: 'marcus.vance@gmail.com', plan: 'VIP', status: 'Active', expiry: '2027-03-15' },
+                { id: 'm2', name: 'Elena Rostova', email: 'elena.r@outlook.com', plan: 'Pro', status: 'Active', expiry: '2027-01-22' },
+                { id: 'm3', name: 'Devon Brooks', email: 'dbrooks92@yahoo.com', plan: 'Basic', status: 'Expired', expiry: '2026-10-30' },
+                { id: 'm4', name: 'Sophia Chen', email: 'sophia.chen@techcorp.io', plan: 'VIP', status: 'Active', expiry: '2027-05-01' },
+                { id: 'm5', name: 'Liam O’Connor', email: 'liam.oconnor@mail.com', plan: 'Pro', status: 'Pending', expiry: '2026-12-01' },
+                { id: 'm6', name: 'Amina Patel', email: 'amina.patel@design.co', plan: 'Pro', status: 'Active', expiry: '2027-02-18' },
+                { id: 'm7', name: 'Tyler Jenkins', email: 'tjenkins@fitness.net', plan: 'Basic', status: 'Active', expiry: '2026-12-28' },
+                { id: 'm8', name: 'Chloe Sterling', email: 'chloe.s@media.com', plan: 'VIP', status: 'Active', expiry: '2027-04-10' }
+            ],
+            classes: [
+                { id: 'c1', title: 'Inferno HIIT Circuit', category: 'HIIT', day: 'Monday', time: '07:00 AM - 08:00 AM', trainer: 'Coach Damon', room: 'Turf Zone A', booked: 17, capacity: 20 },
+                { id: 'c2', title: 'Power Vinyasa Flow', category: 'Yoga', day: 'Monday', time: '09:30 AM - 10:30 AM', trainer: 'Maya Lin', room: 'Zen Studio', booked: 14, capacity: 18 },
+                { id: 'c3', title: 'Velocity Rhythm Spin', category: 'Spin', day: 'Tuesday', time: '05:30 PM - 06:15 PM', trainer: 'Carlos Mendez', room: 'Cycle Lab', booked: 24, capacity: 25 },
+                { id: 'c4', title: 'Barbell Hypertrophy', category: 'Strength', day: 'Wednesday', time: '06:00 PM - 07:15 PM', trainer: 'Coach Damon', room: 'Iron Rack Floor', booked: 12, capacity: 16 },
+                { id: 'c5', title: 'Core & Kettlebell Burn', category: 'HIIT', day: 'Thursday', time: '12:00 PM - 12:45 PM', trainer: 'Elena Rostova', room: 'Turf Zone B', booked: 15, capacity: 20 },
+                { id: 'c6', title: 'Saturday Endurance Ride', category: 'Spin', day: 'Saturday', time: '10:00 AM - 11:00 AM', trainer: 'Carlos Mendez', room: 'Cycle Lab', booked: 20, capacity: 25 }
+            ],
+            equipment: [
+                { id: 'e1', name: 'Woodway 4Front Treadmill #1', zone: 'Cardio Deck', lastService: '2026-10-12', status: 'Operational' },
+                { id: 'e2', name: 'Woodway 4Front Treadmill #2', zone: 'Cardio Deck', lastService: '2026-09-05', status: 'Needs Maintenance' },
+                { id: 'e3', name: 'Concept2 RowErg Station A', zone: 'Cardio Deck', lastService: '2026-11-01', status: 'Operational' },
+                { id: 'e4', name: 'Rogue Monster Power Rack #3', zone: 'Free Weights', lastService: '2026-10-20', status: 'Operational' },
+                { id: 'e5', name: 'Prime Dual Adjustable Pulley', zone: 'Cable Zone', lastService: '2026-08-14', status: 'Out of Order' },
+                { id: 'e6', name: 'Assault AirBike Pro #4', zone: 'HIIT Turf', lastService: '2026-10-28', status: 'Operational' }
+            ],
+            activities: [
+                { id: 'a1', text: 'Marcus Vance checked in at Front Desk', time: '4 mins ago', type: 'checkin' },
+                { id: 'a2', text: 'Sophia Chen booked a spot in Inferno HIIT Circuit', time: '18 mins ago', type: 'booking' },
+                { id: 'a3', text: 'Amina Patel renewed Pro Membership ($69/mo)', time: '1 hour ago', type: 'renewal' },
+                { id: 'a4', text: 'Prime Dual Adjustable Pulley flagged Out of Order', time: '3 hours ago', type: 'alert' }
+            ]
+        };
+
+        // --- Load / Save State ---
+        const STORAGE_KEY = 'apexpulse_gym_state_v1';
+        let appState = loadState();
+        let activeTab = 'dashboard';
+        let selectedDayFilter = 'ALL';
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) return JSON.parse(saved);
+            } catch (e) {
+                console.warn('LocalStorage unavailable, using memory state.');
+            }
+            return JSON.parse(JSON.stringify(DEFAULT_STATE));
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+            } catch (e) {
+                console.warn('Failed to persist state.');
+            }
+        }
+
+        function resetDemoData() {
+            appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            saveState();
+            renderAll();
+            showToast('Sample gym data has been restored.', 'info');
+        }
+
+        // --- Toast Notification Helper ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-slate-900 border-lime-400/50 text-white',
+                info: 'bg-slate-900 border-sky-400/50 text-white',
+                warning: 'bg-slate-900 border-amber-400/50 text-white'
+            };
+            const iconColors = {
+                success: 'text-lime-400',
+                info: 'text-sky-400',
+                warning: 'text-amber-400'
+            };
+            const icons = {
+                success: 'check-circle-2',
+                info: 'info',
+                warning: 'alert-triangle'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-2xl transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.success}`;
+            toast.innerHTML = `
+                <i data-lucide="${icons[type] || icons.success}" class="w-5 h-5 shrink-0 ${iconColors[type] || iconColors.success}"></i>
+                <span class="text-sm font-medium">${message}</span>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
+
+        function logActivity(text, type = 'checkin') {
+            appState.activities.unshift({
+                id: 'act_' + Date.now(),
+                text,
+                time: 'Just now',
+                type
+            });
+            if (appState.activities.length > 15) appState.activities.pop();
+        }
+
+        // --- Navigation & Mobile Drawer ---
+        function switchTab(tabName) {
+            activeTab = tabName;
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.getElementById(`view-${tabName}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                const isSelected = btn.dataset.tab === tabName;
+                if (isSelected) {
+                    btn.className = 'nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all bg-lime-400/10 text-lime-400 border border-lime-400/20';
+                } else {
+                    btn.className = 'nav-item w-full flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all border border-transparent';
+                }
+            });
+
+            // Close mobile sidebar if open
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (!sidebar.classList.contains('-translate-x-full') && window.innerWidth < 1024) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', toggleMobileMenu);
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        // --- 1. Dashboard Rendering & Quick Check-In ---
+        function renderDashboard() {
+            const activeMembers = appState.members.filter(m => m.status === 'Active');
+            const monthlyRevenue = activeMembers.reduce((sum, m) => sum + (PLAN_CONFIG[m.plan]?.price || 0), 0);
+
+            document.getElementById('stat-active-members').textContent = activeMembers.length;
+            document.getElementById('stat-total-members-sub').textContent = `Out of ${appState.members.length} registered profiles`;
+            document.getElementById('stat-checkins').textContent = appState.checkInsToday;
+            document.getElementById('stat-revenue').textContent = `$${monthlyRevenue.toLocaleString()}`;
+
+            // Sidebar badges
+            document.getElementById('nav-member-count').textContent = appState.members.length;
+            const eqIssues = appState.equipment.filter(e => e.status !== 'Operational').length;
+            const alertBadge = document.getElementById('nav-alert-count');
+            if (eqIssues > 0) {
+                alertBadge.textContent = eqIssues;
+                alertBadge.classList.remove('hidden');
+            } else {
+                alertBadge.classList.add('hidden');
+            }
+
+            // Activity Feed
+            const feedContainer = document.getElementById('activity-feed-list');
+            const iconMap = {
+                checkin: { icon: 'log-in', bg: 'bg-lime-400/10 text-lime-400' },
+                booking: { icon: 'calendar-check', bg: 'bg-sky-400/10 text-sky-400' },
+                renewal: { icon: 'credit-card', bg: 'bg-emerald-400/10 text-emerald-400' },
+                alert: { icon: 'alert-triangle', bg: 'bg-amber-400/10 text-amber-400' }
+            };
+
+            feedContainer.innerHTML = appState.activities.map(act => {
+                const style = iconMap[act.type] || iconMap.checkin;
+                return `
+                    <div class="flex items-center gap-3.5 p-3 rounded-xl bg-slate-950/70 border border-slate-800/80">
+                        <div class="w-9 h-9 rounded-lg ${style.bg} flex items-center justify-center shrink-0">
+                            <i data-lucide="${style.icon}" class="w-4 h-4"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm text-slate-200 font-medium truncate">${act.text}</p>
+                            <p class="text-xs text-slate-500 mt-0.5">${act.time}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Today's Lineup Snapshot (top 3 classes)
+            const lineupContainer = document.getElementById('dashboard-classes-list');
+            lineupContainer.innerHTML = appState.classes.slice(0, 3).map(cls => {
+                const pct = Math.min(100, Math.round((cls.booked / cls.capacity) * 100));
+                return `
+                    <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-lime-400">${cls.time.split('-')[0].trim()}</span>
+                            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300">${cls.room}</span>
+                        </div>
+                        <p class="text-sm font-bold text-white">${cls.title}</p>
+                        <div class="flex items-center justify-between text-xs text-slate-400">
+                            <span>${cls.trainer}</span>
+                            <span class="font-semibold text-slate-200">${cls.booked}/${cls.capacity} spots</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-lime-400 rounded-full" style="width: ${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Quick Check-In Search Logic
+        const quickInput = document.getElementById('quick-checkin-input');
+        const quickResults = document.getElementById('quick-checkin-results');
+
+        quickInput.addEventListener('input', (e) => {
+            const q = e.target.value.trim().toLowerCase();
+            if (!q) {
+                quickResults.classList.add('hidden');
+                return;
+            }
+            const matches = appState.members.filter(m =>
+                m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)
+            );
+
+            if (matches.length === 0) {
+                quickResults.innerHTML = `<div class="p-3.5 text-xs text-slate-400 text-center">No matching member found.</div>`;
+            } else {
+                quickResults.innerHTML = matches.map(m => `
+                    <div class="p-3 flex items-center justify-between hover:bg-slate-800/70 transition">
+                        <div class="min-w-0 pr-2">
+                            <p class="text-sm font-semibold text-white truncate">${m.name}</p>
+                            <p class="text-xs text-slate-400">${m.plan} • <span class="${m.status === 'Active' ? 'text-emerald-400' : 'text-rose-400'}">${m.status}</span></p>
+                        </div>
+                        <button onclick="performQuickCheckIn('${m.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold ${m.status === 'Active' ? 'bg-lime-400 text-slate-950 hover:bg-lime-300' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'} transition shrink-0">
+                            ${m.status === 'Active' ? 'Check In' : 'Renew & In'}
+                        </button>
+                    </div>
+                `).join('');
+            }
+            quickResults.classList.remove('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!quickInput.contains(e.target) && !quickResults.contains(e.target)) {
+                quickResults.classList.add('hidden');
+            }
+        });
+
+        function performQuickCheckIn(memberId) {
+            const member = appState.members.find(m => m.id === memberId);
+            if (!member) return;
+
+            if (member.status !== 'Active') {
+                member.status = 'Active';
+                const nextYear = new Date();
+                nextYear.setMonth(nextYear.getMonth() + 1);
+                member.expiry = nextYear.toISOString().split('T')[0];
+                logActivity(`${member.name} renewed (${member.plan}) & checked in`, 'renewal');
+                showToast(`${member.name} renewed & checked in!`, 'success');
+            } else {
+                logActivity(`${member.name} checked in at Front Desk`, 'checkin');
+                showToast(`Checked in ${member.name}`, 'success');
+            }
+
+            appState.checkInsToday += 1;
+            quickInput.value = '';
+            quickResults.classList.add('hidden');
+            saveState();
+            renderAll();
+        }
+
+        // --- 2. Members Management ---
+        function renderMembers() {
+            const search = document.getElementById('member-search').value.trim().toLowerCase();
+            const planFilter = document.getElementById('member-filter-plan').value;
+            const statusFilter = document.getElementById('member-filter-status').value;
+
+            const filtered = appState.members.filter(m => {
+                const matchesSearch = m.name.toLowerCase().includes(search) || m.email.toLowerCase().includes(search);
+                const matchesPlan = planFilter === 'ALL' || m.plan === planFilter;
+                const matchesStatus = statusFilter === 'ALL' || m.status === statusFilter;
+                return matchesSearch && matchesPlan && matchesStatus;
+            });
+
+            const tbody = document.getElementById('members-table-body');
+            const emptyState = document.getElementById('members-empty-state');
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            tbody.innerHTML = filtered.map(m => {
+                const statusStyles = {
+                    Active: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                    Expired: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+                    Pending: 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                };
+                const planBadge = PLAN_CONFIG[m.plan]?.badgeColor || 'bg-slate-800 text-slate-300';
+                const initials = m.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3.5 px-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-lime-400 shrink-0">
+                                    ${initials}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-white">${m.name}</p>
+                                    <p class="text-xs text-slate-400">${m.email}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${planBadge}">${m.plan}</span>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <button onclick="cycleMemberStatus('${m.id}')" title="Click to toggle status"
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer hover:opacity-80 transition ${statusStyles[m.status]}">
+                                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                                ${m.status}
+                            </button>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-300 font-mono text-xs">${m.expiry}</td>
+                        <td class="py-3.5 px-5 text-right">
+                            <div class="inline-flex items-center justify-end gap-2">
+                                <button onclick="renewMember('${m.id}')" title="Renew for +1 Month"
+                                    class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-lime-400 hover:text-slate-950 text-slate-200 text-xs font-semibold transition flex items-center gap-1">
+                                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Renew
+                                </button>
+                                <button onclick="deleteMember('${m.id}')" title="Delete Member"
+                                    class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 transition">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('member-search').addEventListener('input', renderMembers);
+        document.getElementById('member-filter-plan').addEventListener('change', renderMembers);
+        document.getElementById('member-filter-status').addEventListener('change', renderMembers);
+
+        function cycleMemberStatus(id) {
+            const member = appState.members.find(m => m.id === id);
+            if (!member) return;
+            const order = ['Active', 'Pending', 'Expired'];
+            member.status = order[(order.indexOf(member.status) + 1) % order.length];
+            saveState();
+            renderAll();
+            showToast(`${member.name} status changed to ${member.status}`, 'info');
+        }
+
+        function renewMember(id) {
+            const member = appState.members.find(m => m.id === id);
+            if (!member) return;
+            member.status = 'Active';
+            const currentExp = new Date(member.expiry);
+            const baseDate = isNaN(currentExp.getTime()) || currentExp < new Date() ? new Date() : currentExp;
+            baseDate.setMonth(baseDate.getMonth() + 1);
+            member.expiry = baseDate.toISOString().split('T')[0];
+
+            logActivity(`${member.name} renewed ${member.plan} plan (+1 mo)`, 'renewal');
+            saveState();
+            renderAll();
+            showToast(`Renewed ${member.name} until ${member.expiry}`, 'success');
+        }
+
+        function deleteMember(id) {
+            const idx = appState.members.findIndex(m => m.id === id);
+            if (idx === -1) return;
+            const removed = appState.members.splice(idx, 1)[0];
+            saveState();
+            renderAll();
+            showToast(`Removed ${removed.name} from directory`, 'warning');
+        }
+
+        // Member Modal Controls
+        function openMemberModal(defaultPlan = 'Pro') {
+            document.getElementById('new-member-plan').value = defaultPlan;
+            const nextMonth = new Date();
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            document.getElementById('new-member-expiry').value = nextMonth.toISOString().split('T')[0];
+            const modal = document.getElementById('member-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeMemberModal() {
+            const modal = document.getElementById('member-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('add-member-form').reset();
+        }
+
+        document.getElementById('add-member-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('new-member-name').value.trim();
+            const email = document.getElementById('new-member-email').value.trim();
+            const plan = document.getElementById('new-member-plan').value;
+            const status = document.getElementById('new-member-status').value;
+            const expiry = document.getElementById('new-member-expiry').value;
+
+            appState.members.unshift({
+                id: 'm_' + Date.now(),
+                name,
+                email,
+                plan,
+                status,
+                expiry
+            });
+
+            logActivity(`New ${plan} member registered: ${name}`, 'renewal');
+            saveState();
+            closeMemberModal();
+            renderAll();
+            showToast(`Welcome ${name} to ApexPulse!`, 'success');
+        });
+
+        // --- 3. Classes & Schedule ---
+        function renderClasses() {
+            const grid = document.getElementById('classes-grid');
+            const filtered = selectedDayFilter === 'ALL'
+                ? appState.classes
+                : appState.classes.filter(c => c.day === selectedDayFilter);
+
+            const catColors = {
+                HIIT: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+                Yoga: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                Spin: 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+                Strength: 'bg-lime-400/15 text-lime-400 border-lime-400/30'
+            };
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+                        <p class="text-white font-semibold">No classes scheduled for ${selectedDayFilter}</p>
+                        <p class="text-xs text-slate-400 mt-1">Click "Add New Class" to schedule a session.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filtered.map(cls => {
+                const isFull = cls.booked >= cls.capacity;
+                const pct = Math.min(100, Math.round((cls.booked / cls.capacity) * 100));
+                const badge = catColors[cls.category] || catColors.HIIT;
+
+                return `
+                    <div class="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 flex flex-col justify-between transition shadow-lg">
+                        <div>
+                            <div class="flex items-center justify-between gap-2 mb-3">
+                                <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${badge}">${cls.category}</span>
+                                <span class="text-xs font-semibold text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">${cls.day}</span>
+                            </div>
+                            <h3 class="text-lg font-bold text-white">${cls.title}</h3>
+                            <div class="mt-3 space-y-2 text-xs text-slate-300">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="clock" class="w-4 h-4 text-lime-400"></i>
+                                    <span>${cls.time}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="user-check" class="w-4 h-4 text-slate-400"></i>
+                                    <span>Instructor: <strong class="text-white">${cls.trainer}</strong></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="map-pin" class="w-4 h-4 text-slate-400"></i>
+                                    <span>${cls.room}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 pt-4 border-t border-slate-800 space-y-3">
+                            <div>
+                                <div class="flex items-center justify-between text-xs mb-1.5">
+                                    <span class="text-slate-400 font-medium">Spot Availability</span>
+                                    <span class="font-bold ${isFull ? 'text-rose-400' : 'text-lime-400'}">${cls.booked}/${cls.capacity} booked</span>
+                                </div>
+                                <div class="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                                    <div class="h-full ${isFull ? 'bg-rose-500' : 'bg-lime-400'} rounded-full transition-all" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+                            <button onclick="openBookModal('${cls.id}')" ${isFull ? 'disabled' : ''}
+                                class="w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition ${isFull ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-lime-400 hover:bg-lime-300 text-slate-950'}">
+                                <i data-lucide="${isFull ? 'lock' : 'ticket'}" class="w-4 h-4"></i>
+                                <span>${isFull ? 'Class Full' : 'Book Member'}</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Day filter pills
+        document.querySelectorAll('.day-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                selectedDayFilter = pill.dataset.day;
+                document.querySelectorAll('.day-pill').forEach(p => {
+                    if (p.dataset.day === selectedDayFilter) {
+                        p.className = 'day-pill px-4 py-2 rounded-xl text-xs font-bold bg-lime-400 text-slate-950 transition shrink-0';
+                    } else {
+                        p.className = 'day-pill px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 hover:bg-slate-800 border border-slate-800 transition shrink-0';
+                    }
+                });
+                renderClasses();
+                lucide.createIcons();
+            });
+        });
+
+        function openClassModal() {
+            const modal = document.getElementById('class-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeClassModal() {
+            const modal = document.getElementById('class-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.getElementById('add-class-form').reset();
+        }
+
+        document.getElementById('add-class-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = document.getElementById('new-class-title').value.trim();
+            const category = document.getElementById('new-class-category').value;
+            const day = document.getElementById('new-class-day').value;
+            const trainer = document.getElementById('new-class-trainer').value.trim();
+            const time = document.getElementById('new-class-time').value.trim();
+            const room = document.getElementById('new-class-room').value.trim();
+            const capacity = parseInt(document.getElementById('new-class-capacity').value, 10) || 20;
+
+            appState.classes.unshift({
+                id: 'c_' + Date.now(),
+                title,
+                category,
+                day,
+                trainer,
+                time,
+                room,
+                booked: 0,
+                capacity
+            });
+
+            logActivity(`New class added: ${title} (${day})`, 'booking');
+            saveState();
+            closeClassModal();
+            renderAll();
+            showToast(`Scheduled "${title}" on ${day}`, 'success');
+        });
+
+        function openBookModal(classId) {
+            const cls = appState.classes.find(c => c.id === classId);
+            if (!cls) return;
+            const activeMembers = appState.members.filter(m => m.status === 'Active');
+            if (activeMembers.length === 0) {
+                showToast('No active members available to book.', 'warning');
+                return;
+            }
+
+            document.getElementById('book-class-id').value = classId;
+            document.getElementById('book-modal-title').textContent = `Book: ${cls.title}`;
+            document.getElementById('book-modal-subtitle').textContent = `${cls.day} • ${cls.time} (${cls.booked}/${cls.capacity} spots filled)`;
+
+            const select = document.getElementById('book-member-select');
+            select.innerHTML = activeMembers.map(m => `<option value="${m.id}">${m.name} (${m.plan})</option>`).join('');
+
+            const modal = document.getElementById('book-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeBookModal() {
+            const modal = document.getElementById('book-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function confirmClassBooking() {
+            const classId = document.getElementById('book-class-id').value;
+            const memberId = document.getElementById('book-member-select').value;
+            const cls = appState.classes.find(c => c.id === classId);
+            const member = appState.members.find(m => m.id === memberId);
+
+            if (cls && member && cls.booked < cls.capacity) {
+                cls.booked += 1;
+                logActivity(`${member.name} booked a spot in ${cls.title}`, 'booking');
+                saveState();
+                closeBookModal();
+                renderAll();
+                showToast(`Reserved spot for ${member.name} in ${cls.title}`, 'success');
+            }
+        }
+
+        // --- 4. Membership Plans & Billing ---
+        function renderPlans() {
+            const container = document.getElementById('plans-cards-container');
+            const activeMembers = appState.members.filter(m => m.status === 'Active');
+            let totalMRR = 0;
+
+            const tierStats = Object.keys(PLAN_CONFIG).map(tier => {
+                const count = activeMembers.filter(m => m.plan === tier).length;
+                const revenue = count * PLAN_CONFIG[tier].price;
+                totalMRR += revenue;
+                return { tier, count, revenue, ...PLAN_CONFIG[tier] };
+            });
+
+            container.innerHTML = tierStats.map(t => `
+                <div class="bg-slate-900 border ${t.popular ? 'border-lime-400/50 ring-1 ring-lime-400/20' : 'border-slate-800'} rounded-2xl p-6 flex flex-col justify-between relative">
+                    ${t.popular ? `<span class="absolute -top-3 right-6 px-3 py-0.5 rounded-full bg-lime-400 text-slate-950 text-[11px] font-extrabold uppercase tracking-wider">Most Popular</span>` : ''}
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xl font-extrabold text-white">${t.tier}</h3>
+                            <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">${t.count} Active</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">${t.tagline}</p>
+                        <div class="mt-5 flex items-baseline gap-1">
+                            <span class="text-4xl font-extrabold ${t.accent}">$${t.price}</span>
+                            <span class="text-sm text-slate-400">/ month</span>
+                        </div>
+                        <div class="mt-3 p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-center justify-between text-xs">
+                            <span class="text-slate-400">Tier Monthly Revenue</span>
+                            <span class="font-bold text-white">$${t.revenue.toLocaleString()}/mo</span>
+                        </div>
+                        <ul class="mt-5 space-y-2.5 text-sm text-slate-300">
+                            ${t.perks.map(perk => `
+                                <li class="flex items-start gap-2.5">
+                                    <i data-lucide="check" class="w-4 h-4 text-lime-400 shrink-0 mt-0.5"></i>
+                                    <span class="text-xs leading-relaxed">${perk}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+
+                    <button onclick="openMemberModal('${t.tier}')" class="mt-6 w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition ${t.popular ? 'bg-lime-400 hover:bg-lime-300 text-slate-950' : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'}">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        <span>Assign New ${t.tier} Member</span>
+                    </button>
+                </div>
+            `).join('');
+
+            document.getElementById('plans-total-mrr').textContent = `$${totalMRR.toLocaleString()}`;
+
+            const progressBar = document.getElementById('revenue-progress-bar');
+            const legend = document.getElementById('revenue-legend');
+
+            if (totalMRR === 0) {
+                progressBar.innerHTML = `<div class="w-full h-full bg-slate-800"></div>`;
+                legend.innerHTML = `<p class="col-span-3 text-slate-500 text-center">No active subscriptions yet.</p>`;
+            } else {
+                progressBar.innerHTML = tierStats.map(t => {
+                    const pct = (t.revenue / totalMRR) * 100;
+                    return `<div class="h-full ${t.barColor} transition-all duration-500" style="width: ${pct}%" title="${t.tier}: $${t.revenue}"></div>`;
+                }).join('');
+
+                legend.innerHTML = tierStats.map(t => {
+                    const pct = Math.round((t.revenue / totalMRR) * 100);
+                    return `
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full ${t.barColor} shrink-0"></span>
+                            <div>
+                                <p class="font-bold text-white">${t.tier} (${pct}%)</p>
+                                <p class="text-slate-400">$${t.revenue.toLocaleString()} • ${t.count} members</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // --- 5. Equipment & Maintenance Tracker ---
+        function renderEquipment() {
+            const list = document.getElementById('equipment-list');
+            const opCount = appState.equipment.filter(e => e.status === 'Operational').length;
+            const maintCount = appState.equipment.filter(e => e.status === 'Needs Maintenance').length;
+            const outCount = appState.equipment.filter(e => e.status === 'Out of Order').length;
+
+            document.getElementById('eq-count-op').textContent = `${opCount} Operational`;
+            document.getElementById('eq-count-maint').textContent = `${maintCount} Maintenance`;
+            document.getElementById('eq-count-out').textContent = `${outCount} Out of Order`;
+
+            const statusConfig = {
+                'Operational': {
+                    badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+                    icon: 'check-circle-2',
+                    border: 'border-slate-800'
+                },
+                'Needs Maintenance': {
+                    badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+                    icon: 'wrench',
+                    border: 'border-amber-500/30'
+                },
+                'Out of Order': {
+                    badge: 'bg-rose-500/15 text-rose-400 border-rose-500/30',
+                    icon: 'alert-octagon',
+                    border: 'border-rose-500/30'
+                }
+            };
+
+            list.innerHTML = appState.equipment.map(eq => {
+                const cfg = statusConfig[eq.status] || statusConfig['Operational'];
+                return `
+                    <div class="bg-slate-900 border ${cfg.border} rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">${eq.zone}</span>
+                                <span class="text-slate-700">•</span>
+                                <span class="text-xs text-slate-500">Serviced: ${eq.lastService}</span>
+                            </div>
+                            <h4 class="text-base font-bold text-white">${eq.name}</h4>
+                        </div>
+                        <div class="flex items-center justify-between sm:justify-end gap-3">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ${cfg.badge}">
+                                <i data-lucide="${cfg.icon}" class="w-3.5 h-3.5"></i>
+                                ${eq.status}
+                            </span>
+                            <button onclick="toggleEquipmentStatus('${eq.id}')" title="Cycle Status"
+                                class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition">
+                                Update
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleEquipmentStatus(id) {
+            const eq = appState.equipment.find(e => e.id === id);
+            if (!eq) return;
+            const order = ['Operational', 'Needs Maintenance', 'Out of Order'];
+            eq.status = order[(order.indexOf(eq.status) + 1) % order.length];
+            if (eq.status === 'Operational') {
+                eq.lastService = new Date().toISOString().split('T')[0];
+            } else {
+                logActivity(`${eq.name} marked as ${eq.status}`, 'alert');
+            }
+            saveState();
+            renderAll();
+            showToast(`${eq.name}: ${eq.status}`, eq.status === 'Operational' ? 'success' : 'warning');
+        }
+
+        // --- Master Render ---
+        function renderAll() {
+            renderDashboard();
+            renderMembers();
+            renderClasses();
+            renderPlans();
+            renderEquipment();
+            lucide.createIcons();
+        }
+
+        // --- Initialize App ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date-display').textContent = new Date().toLocaleDateString('en-US', options);
+            renderAll();
+        });
+    </script>
+</body>
+</html>
